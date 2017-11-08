@@ -1,31 +1,30 @@
 require 'csv'
 
-arr_of_arrs = File.readlines('IpToCountry.csv')
-@table = []
-arr_of_arrs.each { |e| @table << e unless e[0]== '#' }
-puts @table[0]
-def code_ip_address(ip)
-  pow = 3
-  code = 0
-  ip.split('.').each do |i|
-    code += i.to_i*(256**pow)
-    pow -= 1
+class IpToCountry
+  def initialize
+    @data = CSV.read('IpToCountry.csv', row_sep: "\n", skip_lines: /^#/, encoding: 'windows-1251:utf-8',
+      headers: ['from', 'to', '2', '4', 'Cntr_symbol', 'Cntry', 'Country'])
   end
-  code
-end
 
-def determine_country(ip_code)
-  puts ip_code
-  @table.each do |row|
-    if row[0] == ip_code || row[1] == ip_code
-      puts row[4]
-      break
+  def code_ip_address(ip)
+    pow = 3
+    code = 0
+
+    ip.split('.').each do |i|
+      code += i.to_i * (256**pow)
+      pow -= 1
     end
+
+    code.to_s
+  end
+
+  def determine_country(ip)
+    ip_code = code_ip_address(ip)
+
+    @data.each { |d| return d['Cntr_symbol'] if d['from'] == ip_code }
+
+    raise 'Не найден такой ip'
   end
 end
 
-ip = '85.12.221.146'
-
-determine_country(code_ip_address(ip))
-
-names = ['from', 'to', 'reg', 'assign', 'c', 'ctr', 'country']
+puts IpToCountry.new.determine_country(ARGV[0])
