@@ -1,9 +1,5 @@
-ArgumentError = Class.new(StandardError)
-
 def numbers_output(count)
-  @numbers = (1..20).to_a
-
-  raise ArgumentError, 'Аргумент больше множества уникальных чисел' if count > @numbers.size
+  @numbers = (1..count).to_a
 
   while count > 0
     puts buf = @numbers.sample

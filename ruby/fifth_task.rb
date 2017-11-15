@@ -1,4 +1,5 @@
 require 'csv'
+require 'ipaddr'
 
 class IpToCountry
   def initialize
@@ -7,21 +8,26 @@ class IpToCountry
   end
 
   def code_ip_address(ip)
-    pow = 3
-    code = 0
-
-    ip.split('.').each do |i|
-      code += i.to_i * (256**pow)
-      pow -= 1
-    end
-
-    code.to_s
+    IPAddr.new(ip).to_i
   end
 
   def determine_country(ip)
     ip_code = code_ip_address(ip)
 
-    @data.each { |d| return d['Cntr_symbol'] if d['from'] == ip_code }
+    left = -1
+    right = @data.size
+
+    while left < right - 1
+      middle = (left + right) / 2
+
+      if @data['from'][middle].to_i < ip_code
+        left = middle
+      else
+        right = middle
+      end
+    end
+
+    return @data['Cntr_symbol'][right] if @data['from'][right] == ip_code.to_s
 
     raise 'Не найден такой ip'
   end

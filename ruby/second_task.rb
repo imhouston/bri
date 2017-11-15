@@ -1,21 +1,29 @@
-# определить, какие точки лежат в окружности с заданным радиусом
 class Circle
   def initialize(radius, x_center, y_center)
-    @r = radius
+    @radius = radius
     @x_center = x_center
     @y_center = y_center
   end
 
-  def points_in_circle(points_array)
-    result_values = []
-    points_array.each do |point|
-      result_values << point if (point[0] - @x_center)**2 + (point[1] - @y_center)**2 < @r**2
-    end
-
-    result_values
+  def include?(point)
+    (point.x - @x_center)**2 + (point.y - @y_center)**2 < @radius**2
   end
 end
 
-points = [[10, 10], [20, 20], [2, 3], [4, 4], [62, 57]]
+class Point
+  attr_accessor :x, :y
 
-puts Circle.new(6.25, 60.597223, 60.597223).points_in_circle(points)
+  def initialize(x, y)
+    self.x = x
+    self.y = y
+  end
+
+  def coordinates
+    [x, y]
+  end
+end
+
+points = [Point.new(10, 10), Point.new(20, 10), Point.new(2, 3), Point.new(3, 4), Point.new(65, 57)]
+circle = Circle.new(6, 1, 2)
+
+points.select { |i| circle.include?(i) }.each { |i| puts i.coordinates }
