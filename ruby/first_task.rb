@@ -1,12 +1,9 @@
 class Counter
-  def initialize
-    @hash = Hash.new(0)
-  end
-
   def execute_count(array_a, array_b)
-    (array_a + array_b).flatten!.each { |element| @hash[element] += 1 unless element.nil? }
-
-    @hash
+    (array_a + array_b).flatten!.inject(Hash.new(0)) do |hash, element|
+      hash[element] += 1 unless element.nil?
+      hash
+    end
   end
 end
 
