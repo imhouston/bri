@@ -1,6 +1,6 @@
 class Counter
   def execute_count(array_a, array_b)
-    (array_a + array_b).flatten!.inject(Hash.new(0)) do |hash, element|
+    (array_a + array_b).flatten.inject(Hash.new(0)) do |hash, element|
       hash[element] += 1 unless element.nil?
       hash
     end

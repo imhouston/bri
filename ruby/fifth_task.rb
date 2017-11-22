@@ -14,20 +14,8 @@ class IpToCountry
   def determine_country(ip)
     ip_code = code_ip_address(ip)
 
-    left = -1
-    right = @data.size
-
-    while left < right - 1
-      middle = (left + right) / 2
-
-      if @data['from'][middle].to_i < ip_code
-        left = middle
-      else
-        right = middle
-      end
-    end
-
-    return @data['Cntr_symbol'][right] if @data['from'][right] == ip_code.to_s
+    index = @data['from'].bsearch_index { |x| ip_code - x.to_i }
+    return @data['Cntr_symbol'][index] unless index.nil?
 
     raise 'Не найден такой ip'
   end

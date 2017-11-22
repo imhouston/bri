@@ -1,10 +1,8 @@
 def numbers_output(count)
   @numbers = (1..count).to_a
 
-  while count > 0
-    puts buf = @numbers.sample
-    @numbers.delete(buf)
-    count -= 1
+  count.times do
+    puts @numbers.delete(@numbers[rand(@numbers.size) - 1])
   end
 end
 
