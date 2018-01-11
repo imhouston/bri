@@ -109,10 +109,10 @@ def get_statistic(products)
   puts "Процент товаров с фото: #{count_with_image.to_f / products.count * 100}%"
 
   images_with_sizes = []
-
+  kbyte = 2**10
   sum_images_size = Dir["#{IMAGE_PATH}*.jpg"].inject(0) do |sum_size, filename|
-    size = File.size(filename)
-    images_with_sizes.push(name: filename, size: size)
+    size = File.size(filename).to_f / kbyte
+    images_with_sizes.push(name: filename, size: size.round(2))
     sum_size + size
   end
 
@@ -121,11 +121,11 @@ def get_statistic(products)
 
   puts "Минимульное изображение: #{min_image[:name]} - #{min_image[:size]} KB"
   puts "Максимальное изображение: #{max_image[:name]} - #{max_image[:size]} KB"
-  puts "Средний размер изображения: #{sum_images_size / images_with_sizes.size} KB"
+  puts "Средний размер изображения: #{sum_images_size.to_f / images_with_sizes.size} KB"
 end
 
 categories = get_categories(catalog_link)
 test = get_products(categories)
 
-get_statistic(test)
 parse_to_file(test)
+get_statistic(test)
