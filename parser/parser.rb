@@ -106,7 +106,7 @@ def get_statistic(products)
   end
 
   count_with_image = products.select { |product| product[:image] }.count
-  puts "Процент товаров с фото: #{ count_with_image.to_f / products.count * 100 }"
+  puts "Процент товаров с фото: #{count_with_image.to_f / products.count * 100}%"
 
   images_with_sizes = []
 
@@ -116,16 +116,16 @@ def get_statistic(products)
     sum_size + size
   end
 
-  min_image = images_with_sizes.min { |image| image[:size] }
-  max_image = images_with_sizes.max { |image| image[:size] }
+  min_image = images_with_sizes.min_by { |image| image[:size] }
+  max_image = images_with_sizes.max_by { |image| image[:size] }
 
   puts "Минимульное изображение: #{min_image[:name]} - #{min_image[:size]} KB"
   puts "Максимальное изображение: #{max_image[:name]} - #{max_image[:size]} KB"
-  puts "Средний размер изображения: #{sum_images_size / images_with_sizes.size } KB"
+  puts "Средний размер изображения: #{sum_images_size / images_with_sizes.size} KB"
 end
 
-cat = get_categories(catalog_link)
-test = get_products(cat)
+categories = get_categories(catalog_link)
+test = get_products(categories)
 
 get_statistic(test)
 parse_to_file(test)
