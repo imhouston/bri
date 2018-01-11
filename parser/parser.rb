@@ -111,8 +111,8 @@ def get_statistic(products)
   images_with_sizes = []
   kbyte = 2**10
   sum_images_size = Dir["#{IMAGE_PATH}*.jpg"].inject(0) do |sum_size, filename|
-    size = File.size(filename).to_f / kbyte
-    images_with_sizes.push(name: filename, size: size.round(2))
+    size = (File.size(filename).to_f / kbyte).round(2)
+    images_with_sizes.push(name: filename, size: size)
     sum_size + size
   end
 
