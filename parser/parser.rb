@@ -2,7 +2,7 @@ require 'mechanize'
 require 'securerandom'
 
 URL = 'http://da-mart.ru'
-PRODUCTS_LIMIT = 1500
+PRODUCTS_LIMIT = 1000
 IMAGE_PATH = 'images/'
 CATALOG_FILE_PATH = 'catalog.txt'
 
@@ -10,31 +10,28 @@ CATALOG_FILE_PATH = 'catalog.txt'
 catalog_link = @agent.get(URL).link_with(href: '/catalog/')
 
 def get_categories(catalog_link)
-  categories = []
   page = catalog_link.click
-  page.css('#catalog-main-content .name').each do |cat|
-    categories.push(name: cat.text, path: cat[:href], subcategories: get_subcategories(cat[:href]))
-  end
 
-  categories
+  categories = page.css('#catalog-main-content .name').map do |cat|
+    { name: cat.text, path: cat[:href], subcategories: get_subcategories(cat[:href]) }
+  end
 end
 
 def get_subcategories(category_link)
-  subcategories = []
   page = @agent.get("#{URL}#{category_link}")
-  page.css('#catalog-main-content .name').each do |subcat|
-    subcategories.push(name: subcat.text, path: subcat[:href])
-  end
 
-  subcategories
+  subcategories = page.css('#catalog-main-content .name').map { |subcat| { name: subcat.text, path: subcat[:href] } }
 end
 
 def get_products_from_page(page, products_list, category, subcategory = nil)
   subcategory = category if subcategory.nil?
 
   page.css('#catalog-content td').each do |product|
+    break if products_list.size > PRODUCTS_LIMIT - 1
+
     product_name = product.at_css('.name')
-    next if product_name.nil?
+
+    next if product_name.nil? || product_exists?(product_name.text)
 
     product_uuid = SecureRandom.uuid
     image_link = product.at_css('.pic img')[:src]
@@ -52,12 +49,9 @@ def get_products_from_page(page, products_list, category, subcategory = nil)
       uuid: product_uuid
     )
   end
-
-  products_list
 end
 
-def get_products(catagory_list)
-  products = []
+def get_products(catagory_list, products = [])
   catagory_list.each do |category|
     if category[:subcategories].empty?
       walk_pages(category, products)
@@ -68,17 +62,21 @@ def get_products(catagory_list)
       end
     end
 
-    break if products.size > PRODUCTS_LIMIT
+    break if products.size > PRODUCTS_LIMIT - 1
   end
 
   products
+end
+
+def product_exists?(product_name)
+  @catalog.any? { |product| product[:name].eql?(product_name) }
 end
 
 def walk_pages(category, subcategory = category, products_list)
   cur_page = @agent.get("#{URL}#{subcategory[:path]}")
 
   loop do
-    return if products_list.size > PRODUCTS_LIMIT
+    return if products_list.size > PRODUCTS_LIMIT - 1
 
     get_products_from_page(cur_page, products_list, category[:name], subcategory[:name])
 
@@ -90,12 +88,21 @@ end
 def parse_to_file(products)
   products.each do |product|
     File.open(CATALOG_FILE_PATH, 'a+') do |file|
-      file.puts("Группа\t#{product[:category]}")
-      file.puts("Подгруппа\t#{product[:subcategory]}")
-      file.puts("Название\t#{product[:name]}")
-      product[:image].nil? ? file.puts("Фото\tОтсутствует") : file.puts("Фото\t#{product[:image]}")
-      file.puts("Идентификатор товара\t#{product[:uuid]}")
+      file.puts("Группа\t#{product[:category]}\tПодгруппа\t#{product[:subcategory]}\tНазвание\t#{product[:name]}" +
+        "\tФото\t#{product[:image]}\tИдентфикатор товара\t#{product[:uuid]}")
     end
+  end
+end
+
+def parse_from_file
+  return [] unless File.exist?(CATALOG_FILE_PATH)
+
+  current_calalog = File.readlines(CATALOG_FILE_PATH).map(&:chomp)
+
+  products_list = current_calalog.map do |product|
+    row = product.split("\t")
+    image = row[7] unless row[7] == ''
+    { category: row[1], subcategory: row[3], name: row[5], image: image, uuid: row[9] }
   end
 end
 
@@ -124,8 +131,8 @@ def get_statistic(products)
   puts "Средний размер изображения: #{sum_images_size.to_f / images_with_sizes.size} KB"
 end
 
+@catalog = parse_from_file
 categories = get_categories(catalog_link)
-test = get_products(categories)
-
-parse_to_file(test)
-get_statistic(test)
+products = get_products(categories)
+parse_to_file(products)
+get_statistic(@catalog + products)
